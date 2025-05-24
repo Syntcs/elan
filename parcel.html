@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team ELAN - Parcel Tracker</title>
+    <style>
+        :root {
+            --bg-dark: #1a1a1a;
+            --bg-darker: #121212;
+            --bg-card: #222222;
+            --text-color: #e0e0e0;
+            --accent-color: #3a7bd5;
+            --border-color: #333333;
+            --hover-color: #2a2a2a;
+            --success-color: #4caf50;
+            --warning-color: #ff9800;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--bg-darker);
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            flex-grow: 1;
+            text-align: center;
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: none;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color);
+            opacity: 0.7;
+        }
+
+        main {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 200px;
+            background-color: var(--bg-darker);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            padding: 1rem 0;
+            overflow-y: auto;
+        }
+
+        .sidebar-title {
+            padding: 0.5rem 1rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .sidebar-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-color);
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--hover-color);
+        }
+
+        .sidebar-bottom {
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 0;
+            flex-shrink: 0;
+        }
+
+        .content {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            padding: 1rem;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background-color: #d32f2f;
+        }
+
+        .btn-icon {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 0.25rem 0.5rem;
+            min-width: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background-color: var(--hover-color);
+        }
+
+        .btn-toggle {
+            background-color: transparent;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            padding: 0.25rem;
+            margin-left: 0.5rem;
+        }
+
+        .btn-toggle:hover {
+            color: var(--accent-color);
+        }
+
+        .vehicle-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+
+        .vehicle-card {
+            background-color: var(--bg-card);
+            border-radius: 4px;
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+        }
+
+        .vehicle-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .vehicle-title {
+            display: flex;
+            align-items: center;
+            flex: 1;
+        }
+
+        .vehicle-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .parcel-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .parcel-list.collapsed {
+            display: none;
+        }
+
+        .parcel-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 0.5rem;
+            border-radius: 4px;
+        }
+
+        .parcel-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .parcel-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-display {
+            min-width: 30px;
+            text-align: center;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .modal-title {
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.5rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.5rem;
+        }
+
+        .btn-cancel {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+        }
+
+        footer {
+            background-color: var(--bg-darker);
+            padding: 1rem;
+            text-align: center;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            flex-shrink: 0;
+        }
+
+        .footer-link {
+            color: var(--accent-color);
+            text-decoration: none;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Parcel Overview Styles */
+        .parcel-overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .parcel-overview-item {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .parcel-overview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .parcel-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .total-quantity {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .vehicle-list-overview {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .vehicle-overview-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            border-left: 3px solid var(--accent-color);
+        }
+
+        .vehicle-info {
+            flex: 1;
+        }
+
+        .vehicle-name {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        .vehicle-desc {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.25rem;
+        }
+
+        .quantity-badge {
+            background-color: var(--success-color);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow: auto;
+                height: auto;
+            }
+
+            main {
+                flex-direction: column;
+                overflow: visible;
+            }
+
+            .sidebar {
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+
+            .vehicle-list {
+                grid-template-columns: 1fr;
+            }
+
+            .search-container {
+                width: 250px;
+            }
+
+            .parcel-overview-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .overview-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-title">
+            <h1>Team ELAN - Parcel Tracker</h1>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Fahrzeug suchen...">
+            <span class="search-icon">🔍</span>
+        </div>
+    </header>
+
+    <main>
+        <aside class="sidebar">
+            <div class="sidebar-content">
+                <div class="sidebar-title">Kategorien</div>
+                <div class="sidebar-item" id="allVehicles">
+                    Alle Fahrzeuge
+                </div>
+                <div class="sidebar-item" id="parcelOverview">
+                    Parcel Übersicht
+                </div>
+            </div>
+            <div class="sidebar-bottom">
+                <div class="sidebar-title">Wiki Link</div>
+                <a href="https://wiki.team-elan.com/Parcelservice" target="_blank" class="sidebar-item">
+                    Parcelservice Wiki
+                </a>
+            </div>
+        </aside>
+
+        <div class="content">
+            <div class="card" id="vehicleCard">
+                <div class="card-title">
+                    <h2>Fahrzeug Übersicht</h2>
+                    <button class="btn" id="addVehicleBtn">Fahrzeug hinzufügen</button>
+                </div>
+                <div id="vehicleList" class="vehicle-list">
+                    <div class="empty-state" id="emptyState">
+                        <p>Keine Fahrzeuge vorhanden. Füge ein Fahrzeug hinzu, um Parcels zu verwalten.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="parcelOverviewCard" style="display: none;">
+                <div class="card-title">
+                    <h2>Parcel Übersicht</h2>
+                </div>
+                
+                <div class="overview-stats" id="overviewStats">
+                    <!-- Stats will be generated here -->
+                </div>
+
+                <div id="parcelOverviewContent" class="parcel-overview-grid">
+                    <!-- Parcel overview will be generated here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal" id="addVehicleModal">
+        <div class="modal-content">
+            <div class="modal-title">Fahrzeug hinzufügen</div>
+            <div class="form-group">
+                <label for="vehicleName">Fahrzeugname</label>
+                <input type="text" id="vehicleName" placeholder="z.B. SUV #1">
+            </div>
+            <div class="form-group">
+                <label for="vehicleDescription">Beschreibung (optional)</label>
+                <input type="text" id="vehicleDescription" placeholder="z.B. Schwarzer SUV beim Hauptquartier">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-cancel" id="cancelAddVehicle">Abbrechen</button>
+                <button class="btn" id="confirmAddVehicle">Hinzufügen</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Diese Seite ist nicht offiziell mit Team ELAN verbunden. Für offizielle Ressourcen besuche <a href="https://wiki.team-elan.com" class="footer-link">wiki.team-elan.com</a> oder <a href="https://team-elan.com" class="footer-link">team-elan.com</a></p>
+    </footer>
+
+    <script>
+        // Data storage
+        let vehicles = JSON.parse(localStorage.getItem('elanVehicles')) || [];
+        let collapsedVehicles = JSON.parse(localStorage.getItem('collapsedVehicles')) || {};
+        
+        // Migrate old data format (boolean arrays) to new format (quantity arrays)
+        vehicles = vehicles.map(vehicle => {
+            if (vehicle.parcels && typeof vehicle.parcels[0] === 'boolean') {
+                vehicle.parcels = vehicle.parcels.map(hasParcel => hasParcel ? 1 : 0);
+            } else if (!vehicle.parcels) {
+                vehicle.parcels = Array(12).fill(0);
+            }
+            return vehicle;
+        });
+        
+        // DOM Elements
+        const vehicleList = document.getElementById('vehicleList');
+        const emptyState = document.getElementById('emptyState');
+        const addVehicleBtn = document.getElementById('addVehicleBtn');
+        const addVehicleModal = document.getElementById('addVehicleModal');
+        const vehicleNameInput = document.getElementById('vehicleName');
+        const vehicleDescInput = document.getElementById('vehicleDescription');
+        const confirmAddVehicleBtn = document.getElementById('confirmAddVehicle');
+        const cancelAddVehicleBtn = document.getElementById('cancelAddVehicle');
+        const searchInput = document.getElementById('searchInput');
+        const allVehiclesBtn = document.getElementById('allVehicles');
+        const parcelOverviewBtn = document.getElementById('parcelOverview');
+        const vehicleCard = document.getElementById('vehicleCard');
+        const parcelOverviewCard = document.getElementById('parcelOverviewCard');
+        const parcelOverviewContent = document.getElementById('parcelOverviewContent');
+        const overviewStats = document.getElementById('overviewStats');
+
+        // Initialize
+        renderVehicles();
+
+        // Event Listeners
+        addVehicleBtn.addEventListener('click', () => {
+            addVehicleModal.style.display = 'flex';
+            vehicleNameInput.focus();
+        });
+
+        confirmAddVehicleBtn.addEventListener('click', addVehicle);
+
+        cancelAddVehicleBtn.addEventListener('click', () => {
+            addVehicleModal.style.display = 'none';
+            vehicleNameInput.value = '';
+            vehicleDescInput.value = '';
+        });
+
+        searchInput.addEventListener('input', filterVehicles);
+
+        allVehiclesBtn.addEventListener('click', () => {
+            vehicleCard.style.display = 'block';
+            parcelOverviewCard.style.display = 'none';
+        });
+
+        parcelOverviewBtn.addEventListener('click', () => {
+            vehicleCard.style.display = 'none';
+            parcelOverviewCard.style.display = 'block';
+            renderParcelOverview();
+        });
+
+        // Functions
+        function addVehicle() {
+            const name = vehicleNameInput.value.trim();
+            if (!name) return;
+
+            const newVehicle = {
+                id: Date.now(),
+                name: name,
+                description: vehicleDescInput.value.trim(),
+                parcels: Array(12).fill(0) // 12 parcels, all initially with quantity 0
+            };
+
+            vehicles.push(newVehicle);
+            saveVehicles();
+            renderVehicles();
+
+            // Close modal and reset inputs
+            addVehicleModal.style.display = 'none';
+            vehicleNameInput.value = '';
+            vehicleDescInput.value = '';
+        }
+
+        function toggleVehicleCollapse(vehicleId) {
+            collapsedVehicles[vehicleId] = !collapsedVehicles[vehicleId];
+            localStorage.setItem('collapsedVehicles', JSON.stringify(collapsedVehicles));
+            renderVehicles();
+        }
+
+        function changeParcelQuantity(vehicleId, parcelIndex, change) {
+            const vehicle = vehicles.find(v => v.id === vehicleId);
+            if (vehicle) {
+                const newQuantity = vehicle.parcels[parcelIndex] + change;
+                vehicle.parcels[parcelIndex] = Math.max(0, newQuantity); // Prevent negative quantities
+                saveVehicles();
+                renderVehicles();
+            }
+        }
+
+        function deleteVehicle(vehicleId) {
+            if (confirm('Bist du sicher, dass du dieses Fahrzeug löschen möchtest?')) {
+                vehicles = vehicles.filter(v => v.id !== vehicleId);
+                delete collapsedVehicles[vehicleId];
+                saveVehicles();
+                renderVehicles();
+            }
+        }
+
+        function saveVehicles() {
+            localStorage.setItem('elanVehicles', JSON.stringify(vehicles));
+        }
+
+        function renderVehicles(filteredVehicles = null) {
+            const vehiclesToRender = filteredVehicles || vehicles;
+            
+            if (vehiclesToRender.length === 0) {
+                emptyState.style.display = 'block';
+                vehicleList.innerHTML = '';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            vehicleList.innerHTML = '';
+
+            vehiclesToRender.forEach(vehicle => {
+                const isCollapsed = collapsedVehicles[vehicle.id];
+                const vehicleCard = document.createElement('div');
+                vehicleCard.className = 'vehicle-card';
+                
+                const vehicleHeader = document.createElement('div');
+                vehicleHeader.className = 'vehicle-header';
+                
+                const vehicleTitle = document.createElement('div');
+                vehicleTitle.className = 'vehicle-title';
+                
+                const vehicleInfo = document.createElement('div');
+                vehicleInfo.innerHTML = `
+                    <h3>${vehicle.name}</h3>
+                    ${vehicle.description ? `<p>${vehicle.description}</p>` : ''}
+                `;
+                
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'btn-toggle';
+                toggleBtn.innerHTML = isCollapsed ? '▶' : '▼';
+                toggleBtn.addEventListener('click', () => toggleVehicleCollapse(vehicle.id));
+                
+                vehicleTitle.appendChild(vehicleInfo);
+                vehicleTitle.appendChild(toggleBtn);
+                
+                const vehicleActions = document.createElement('div');
+                vehicleActions.className = 'vehicle-actions';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'btn btn-small btn-danger';
+                deleteBtn.textContent = 'Löschen';
+                deleteBtn.addEventListener('click', () => deleteVehicle(vehicle.id));
+                
+                vehicleActions.appendChild(deleteBtn);
+                vehicleHeader.appendChild(vehicleTitle);
+                vehicleHeader.appendChild(vehicleActions);
+                
+                const parcelList = document.createElement('div');
+                parcelList.className = `parcel-list ${isCollapsed ? 'collapsed' : ''}`;
+                
+                for (let i = 0; i < 12; i++) {
+                    const parcelItem = document.createElement('div');
+                    parcelItem.className = 'parcel-item';
+                    
+                    const parcelName = document.createElement('div');
+                    parcelName.className = 'parcel-name';
+                    parcelName.textContent = `Parcel ${i + 1}`;
+                    
+                    const parcelControls = document.createElement('div');
+                    parcelControls.className = 'parcel-controls';
+                    
+                    const decreaseBtn = document.createElement('button');
+                    decreaseBtn.className = 'btn btn-icon';
+                    decreaseBtn.textContent = '-';
+                    decreaseBtn.addEventListener('click', () => changeParcelQuantity(vehicle.id, i, -1));
+                    
+                    const quantityDisplay = document.createElement('div');
+                    quantityDisplay.className = 'quantity-display';
+                    quantityDisplay.textContent = vehicle.parcels[i];
+                    
+                    const increaseBtn = document.createElement('button');
+                    increaseBtn.className = 'btn btn-icon';
+                    increaseBtn.textContent = '+';
+                    increaseBtn.addEventListener('click', () => changeParcelQuantity(vehicle.id, i, 1));
+                    
+                    parcelControls.appendChild(decreaseBtn);
+                    parcelControls.appendChild(quantityDisplay);
+                    parcelControls.appendChild(increaseBtn);
+                    
+                    parcelItem.appendChild(parcelName);
+                    parcelItem.appendChild(parcelControls);
+                    parcelList.appendChild(parcelItem);
+                }
+                
+                vehicleCard.appendChild(vehicleHeader);
+                vehicleCard.appendChild(parcelList);
+                vehicleList.appendChild(vehicleCard);
+            });
+        }
+
+        function filterVehicles() {
+            const searchTerm = searchInput.value.toLowerCase();
+            if (!searchTerm) {
+                renderVehicles();
+                return;
+            }
+
+            const filtered = vehicles.filter(vehicle => 
+                vehicle.name.toLowerCase().includes(searchTerm) || 
+                (vehicle.description && vehicle.description.toLowerCase().includes(searchTerm))
+            );
+            
+            renderVehicles(filtered);
+        }
+
+        function renderParcelOverview() {
+            // Calculate statistics
+            const totalVehicles = vehicles.length;
+            const totalParcels = vehicles.reduce((sum, v) => sum + v.parcels.reduce((s, p) => s + p, 0), 0);
+            const parcelTypes = 12;
+            const usedParcelTypes = Array.from({length: 12}, (_, i) => 
+                vehicles.some(v => v.parcels[i] > 0)
+            ).filter(Boolean).length;
+
+            // Render statistics
+            overviewStats.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${totalVehicles}</div>
+                    <div class="stat-label">Fahrzeuge</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${totalParcels}</div>
+                    <div class="stat-label">Parcels Gesamt</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${usedParcelTypes}</div>
+                    <div class="stat-label">Parcel-Typen in Verwendung</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${parcelTypes}</div>
+                    <div class="stat-label">Verfügbare Parcel-Typen</div>
+                </div>
+            `;
+
+            parcelOverviewContent.innerHTML = '';
+            
+            // Create overview for each parcel showing quantities in each vehicle
+            for (let i = 0; i < 12; i++) {
+                const vehiclesWithParcel = vehicles.filter(v => v.parcels[i] > 0);
+                const totalQuantity = vehicles.reduce((sum, v) => sum + v.parcels[i], 0);
+                
+                // Only show parcels that have at least 1 quantity somewhere
+                if (totalQuantity === 0) continue;
+                
+                const parcelOverviewItem = document.createElement('div');
+                parcelOverviewItem.className = 'parcel-overview-item';
+                
+                const header = document.createElement('div');
+                header.className = 'parcel-overview-header';
+                
+                const title = document.createElement('div');
+                title.className = 'parcel-title';
+                title.textContent = `Parcel ${i + 1}`;
+                
+                const totalBadge = document.createElement('div');
+                totalBadge.className = 'total-quantity';
+                totalBadge.textContent = totalQuantity;
+                
+                header.appendChild(title);
+                header.appendChild(totalBadge);
+                
+                const vehicleListOverview = document.createElement('div');
+                vehicleListOverview.className = 'vehicle-list-overview';
+                
+                vehiclesWithParcel.forEach(vehicle => {
+                    const vehicleItem = document.createElement('div');
+                    vehicleItem.className = 'vehicle-overview-item';
+                    
+                    const vehicleInfo = document.createElement('div');
+                    vehicleInfo.className = 'vehicle-info';
+                    
+                    const vehicleName = document.createElement('div');
+                    vehicleName.className = 'vehicle-name';
+                    vehicleName.textContent = vehicle.name;
+                    
+                    vehicleInfo.appendChild(vehicleName);
+                    
+                    if (vehicle.description) {
+                        const vehicleDesc = document.createElement('div');
+                        vehicleDesc.className = 'vehicle-desc';
+                        vehicleDesc.textContent = vehicle.description;
+                        vehicleInfo.appendChild(vehicleDesc);
+                    }
+                    
+                    const quantityBadge = document.createElement('div');
+                    quantityBadge.className = 'quantity-badge';
+                    quantityBadge.textContent = vehicle.parcels[i];
+                    
+                    vehicleItem.appendChild(vehicleInfo);
+                    vehicleItem.appendChild(quantityBadge);
+                    vehicleListOverview.appendChild(vehicleItem);
+                });
+                
+                parcelOverviewItem.appendChild(header);
+                parcelOverviewItem.appendChild(vehicleListOverview);
+                parcelOverviewContent.appendChild(parcelOverviewItem);
+            }
+
+            // Show message if no parcels are in use
+            if (parcelOverviewContent.children.length === 0) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-state';
+                emptyMessage.innerHTML = '<p>Keine Parcels in Fahrzeugen gefunden.</p>';
+                parcelOverviewContent.appendChild(emptyMessage);
+            }
+        }
+
+        // Close modal when clicking outside
+        window.addEventListener('click', (e) => {
+            if (e.target === addVehicleModal) {
+                addVehicleModal.style.display = 'none';
+            }
+        });
+
+        // Handle Enter key in modal
+        vehicleNameInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                addVehicle();
+            }
+        });
+
+        vehicleDescInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                addVehicle();
+            }
+        });
+    </script>
+</body>
+</html>
